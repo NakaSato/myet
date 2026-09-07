@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import type { Assessment } from "@/lib/assess";
 import { Band, BandScale, CATEGORY_LABEL, CRITERIA, Card, SectionTitle, Spinner, formatDate } from "@/app/ui";
 
@@ -59,11 +59,13 @@ function segment(body: string, corrections: Correction[]): { segments: Segment[]
 
 export default function EssayReviewPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [data, setData] = useState<{ essay: Essay; assessments: AssessmentRow[] } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<number | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const listRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   useEffect(() => {
@@ -259,6 +261,33 @@ export default function EssayReviewPage() {
           </span>
         )}
         {error && <span className="text-sm text-bad">{error}</span>}
+
+        <div className="ml-auto flex items-center gap-3">
+          {confirmDelete ? (
+            <>
+              <span className="text-sm text-muted">Delete this essay and its markings?</span>
+              <button onClick={() => setConfirmDelete(false)} className="btn-secondary">
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await fetch(`/api/essays/${id}`, { method: "DELETE" });
+                  router.push("/essays");
+                }}
+                className="btn-secondary !border-bad/50 !text-bad"
+              >
+                Delete
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="text-xs text-muted hover:text-bad"
+            >
+              Delete essay
+            </button>
+          )}
+        </div>
       </section>
     </div>
   );

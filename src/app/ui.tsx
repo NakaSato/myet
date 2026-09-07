@@ -30,10 +30,18 @@ export function formatDate(sqlite: string) {
 }
 
 /** A band number. Colour has one job: green means the target is met. */
-export function Band({ value, size = "md" }: { value: number | null; size?: "sm" | "md" | "lg" | "xl" }) {
+export function Band({
+  value,
+  size = "md",
+  target = TARGET_BAND,
+}: {
+  value: number | null;
+  size?: "sm" | "md" | "lg" | "xl";
+  target?: number;
+}) {
   const cls = { sm: "text-base", md: "text-2xl", lg: "text-5xl", xl: "text-7xl" }[size];
   if (value == null) return <span className={`font-mono tabular-nums text-muted ${cls}`}>–</span>;
-  const tone = value >= TARGET_BAND ? "text-good" : "text-foreground";
+  const tone = value >= target ? "text-good" : "text-foreground";
   return (
     <span className={`font-mono font-medium tabular-nums leading-none tracking-tight ${tone} ${cls}`}>
       {value.toFixed(1)}
@@ -85,13 +93,19 @@ export function BandScale({ value, target = TARGET_BAND }: { value: number | nul
 }
 
 /** Four tiny bars, one per criterion — the shape of a score at a glance. */
-export function CriteriaBars({ bands }: { bands: (number | null)[] }) {
+export function CriteriaBars({
+  bands,
+  target = TARGET_BAND,
+}: {
+  bands: (number | null)[];
+  target?: number;
+}) {
   return (
     <span className="inline-flex h-6 items-end gap-[3px]" aria-hidden>
       {bands.map((b, i) => (
         <span
           key={i}
-          className={`w-1.5 rounded-sm ${b != null && b >= TARGET_BAND ? "bg-good" : "bg-muted/60"}`}
+          className={`w-1.5 rounded-sm ${b != null && b >= target ? "bg-good" : "bg-muted/60"}`}
           style={{ height: `${b == null ? 4 : 6 + ((b - 4) / 5) * 18}px` }}
         />
       ))}

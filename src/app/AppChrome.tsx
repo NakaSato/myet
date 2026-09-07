@@ -7,6 +7,7 @@ const NAV = [
   { href: "/", label: "Home" },
   { href: "/essays", label: "Essays" },
   { href: "/stats", label: "Progress" },
+  { href: "/settings", label: "Settings" },
 ];
 
 /** The exam screen owns the whole viewport — no app chrome, like the real test. */

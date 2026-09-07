@@ -32,7 +32,7 @@ the official task wording, a countdown that warns at 10 and 5 minutes, and word
 count against the 250 minimum. Fixed light theme, no app navigation, no
 spell-check — what you practise on is what you sit in front of on the day.
 
-![The writing screen: 40-minute countdown, question on the left, answer on the right, word count in the footer](docs/screenshots/write.png)
+![The writing screen in use: a prompt is drawn, the essay is typed, the clock runs down and the word count climbs toward 250](docs/screenshots/demo.gif)
 
 Drafts are saved as you type, so a stray refresh can't cost you 40 minutes.
 
@@ -61,32 +61,38 @@ Per-criterion trends over every essay you've written:
 
 ---
 
+## Settings
+
+Provider, target band, weekly and total goals, exam length and the word minimum
+are all configurable, and calibration runs from the page. The API key is stored
+in `app.db` on your machine — gitignored, and never sent back to the browser.
+
 ## Quickstart
 
 ```bash
 npm install
-cp .env.local.example .env.local    # pick a provider block, add a key
-npm run serve                       # http://localhost:3000
+npm run serve       # http://localhost:3000
 ```
 
-The schema is created and 32 Task 2 prompts seeded on first boot.
+The schema is created and 32 Task 2 prompts seeded on first boot. Then open
+**Settings**, pick a provider, paste a key, and press **Test connection**.
+
+![The settings page: provider presets, endpoint and model fields, connection test, calibration, and target band](docs/screenshots/settings.png)
+
+Settings are stored in the database and read on every call, so a change takes
+effect immediately — no file editing, no restart. `LLM_BASE_URL` / `LLM_API_KEY` /
+`LLM_MODEL` still work as a fallback, which keeps `npm run calibrate` and a fresh
+clone working before anything is configured.
 
 ### Choosing a provider
 
-Marking talks to any **OpenAI-compatible** endpoint, chosen by three environment
-variables — no code change to swap between them.
+Marking talks to any **OpenAI-compatible** endpoint.
 
 | | Cost | Trade-off |
 |---|---|---|
 | **Groq** free tier | free | rate-limited; easiest start |
 | **OpenRouter** + DeepSeek / Qwen | ~$0.001–0.003 per essay | needs a minimum top-up |
 | **Ollama** / LM Studio, local | free | a 7–14B model marks noticeably worse |
-
-```bash
-LLM_BASE_URL=https://api.groq.com/openai/v1
-LLM_API_KEY=gsk_...
-LLM_MODEL=llama-3.3-70b-versatile
-```
 
 Model size shows up directly in marking quality. A small local model will invent
 evidence, miss agreement errors, and hand band 7.5 to a band 6 essay. If you run
@@ -165,7 +171,9 @@ category counts today.
 | `npm run dev` | dev server with hot reload |
 | `npm run calibrate` | mark the official samples, report the gap |
 | `npm run resources` | re-download all 30 official IELTS PDFs |
-| `npm run screenshots` | regenerate the images in this README |
+| `npm run screenshots` | regenerate the still images in this README |
+| `npm run demo` | re-record the animated demo |
+| `npm run inspera` | extract the 20 interactive sample tasks to text |
 
 ## Layout
 

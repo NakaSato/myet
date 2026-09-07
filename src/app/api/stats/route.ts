@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { LLM, llmConfigError } from "@/lib/assess";
+import { llm, llmConfigError } from "@/lib/assess";
+import { publicSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,12 @@ export function GET() {
     recent,
     errors,
     totals: { ...(totals as object), unmarked: unmarked.c },
-    llm: { configured: llmConfigError() === null, model: LLM.model, endpoint: LLM.baseURL, error: llmConfigError() },
+    llm: {
+      configured: llmConfigError() === null,
+      model: llm().model,
+      endpoint: llm().baseURL,
+      error: llmConfigError(),
+    },
+    settings: publicSettings(), // never ship the API key to the browser
   });
 }

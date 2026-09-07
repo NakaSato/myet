@@ -6,7 +6,8 @@ import Link from "next/link";
 
 type Prompt = { id: number; type: string; category: string | null; text: string };
 
-const EXAM_SECONDS = 40 * 60;
+const DEFAULT_EXAM_SECONDS = 40 * 60;
+const DEFAULT_MIN_WORDS = 250;
 const DRAFT_KEY = "ielts.draft.v1";
 const WARN_AT = [10 * 60, 5 * 60]; // the real test warns at 10 and 5 minutes
 
@@ -19,7 +20,9 @@ export default function WritePage() {
   const router = useRouter();
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [body, setBody] = useState("");
-  const [remaining, setRemaining] = useState(EXAM_SECONDS);
+  const [examSeconds, setExamSeconds] = useState(DEFAULT_EXAM_SECONDS);
+  const [minWords, setMinWords] = useState(DEFAULT_MIN_WORDS);
+  const [remaining, setRemaining] = useState(DEFAULT_EXAM_SECONDS);
   const [running, setRunning] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +42,7 @@ export default function WritePage() {
         const d = JSON.parse(raw);
         setPrompt(d.prompt ?? null);
         setBody(d.body ?? "");
-        setRemaining(typeof d.remaining === "number" ? d.remaining : EXAM_SECONDS);
+        setRemaining(typeof d.remaining === "number" ? d.remaining : DEFAULT_EXAM_SECONDS);
       } catch {
         /* corrupt draft — ignore */
       }
@@ -47,6 +50,16 @@ export default function WritePage() {
     restored.current = true;
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => {
+        setExamSeconds(d.settings.exam_minutes * 60);
+        setMinWords(d.settings.min_words);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!restored.current) return;
@@ -82,7 +95,7 @@ export default function WritePage() {
       if (!res.ok) throw new Error((await res.json()).error ?? "Could not draw a prompt");
       setPrompt(await res.json());
       setBody("");
-      setRemaining(EXAM_SECONDS);
+      setRemaining(examSeconds);
       setDismissed([]);
       setRunning(true);
     } catch (e) {
@@ -90,7 +103,7 @@ export default function WritePage() {
     } finally {
       setBusy(null);
     }
-  }, []);
+  }, [examSeconds]);
 
   const words = body.trim() ? body.trim().split(/\s+/).length : 0;
 
@@ -105,7 +118,7 @@ export default function WritePage() {
         body: JSON.stringify({
           prompt_id: prompt?.id ?? null,
           body,
-          time_taken_s: EXAM_SECONDS - remaining,
+          time_taken_s: examSeconds - remaining,
         }),
       });
       if (!save.ok) throw new Error((await save.json()).error ?? "Could not save the essay");
@@ -181,7 +194,7 @@ export default function WritePage() {
       <div className="h-[3px] shrink-0 bg-[#e6e6e6]">
         <div
           className={`h-full transition-[width] duration-1000 ease-linear ${low ? "bg-[#c1121f]" : "bg-[#8a8a8a]"}`}
-          style={{ width: `${(remaining / EXAM_SECONDS) * 100}%` }}
+          style={{ width: `${(remaining / examSeconds) * 100}%` }}
         />
       </div>
 
@@ -206,7 +219,7 @@ export default function WritePage() {
           <h1 className="mb-3 text-base font-bold">Part 2</h1>
           {prompt ? (
             <div className="max-w-[52ch] space-y-3 text-[15px] leading-relaxed">
-              <p>You should spend about 40 minutes on this task.</p>
+              <p>You should spend about {Math.round(examSeconds / 60)} minutes on this task.</p>
               <p>Write about the following topic:</p>
               <blockquote className="border border-[#c9c9c9] bg-[#fafafa] px-4 py-3 whitespace-pre-line">
                 {prompt.text}
@@ -215,16 +228,17 @@ export default function WritePage() {
                 Give reasons for your answer and include any relevant examples from your own
                 knowledge or experience.
               </p>
-              <p className="font-semibold">Write at least 250 words.</p>
+              <p className="font-semibold">Write at least {minWords} words.</p>
             </div>
           ) : (
             <div className="max-w-[52ch] space-y-3 text-[15px] leading-relaxed text-[#555]">
               <p>
                 Press <strong>Start</strong> to draw a Task 2 question. The clock begins
-                immediately and runs for 40 minutes, exactly as it does on test day.
+                immediately and runs for {Math.round(examSeconds / 60)} minutes, exactly as it does
+                on test day.
               </p>
               <ul className="space-y-1.5 border-l-2 border-[#e0e0e0] pl-4 text-[14px]">
-                <li>Minimum 250 words — the counter turns green when you reach it.</li>
+                <li>Minimum {minWords} words — the counter turns green when you reach it.</li>
                 <li>Warnings appear at 10 and 5 minutes remaining.</li>
                 <li>Spell-check is off. The real test has none either.</li>
                 <li>Your work is saved as you type; a refresh will not cost you the attempt.</li>
@@ -302,14 +316,14 @@ export default function WritePage() {
             </span>
             <span className="h-1.5 w-24 overflow-hidden rounded-full bg-[#e6e6e6]">
               <span
-                className={`block h-full rounded-full transition-[width] ${words >= 250 ? "bg-[#15803d]" : "bg-[#8a8a8a]"}`}
-                style={{ width: `${Math.min(100, (words / 250) * 100)}%` }}
+                className={`block h-full rounded-full transition-[width] ${words >= minWords ? "bg-[#15803d]" : "bg-[#8a8a8a]"}`}
+                style={{ width: `${Math.min(100, (words / minWords) * 100)}%` }}
               />
             </span>
-            {words > 0 && words < 250 && (
-              <span className="text-[#767676]">{250 - words} to the minimum</span>
+            {words > 0 && words < minWords && (
+              <span className="text-[#767676]">{minWords - words} to the minimum</span>
             )}
-            {words >= 250 && <span className="text-[#15803d]">minimum met</span>}
+            {words >= minWords && <span className="text-[#15803d]">minimum met</span>}
           </span>
         </div>
 

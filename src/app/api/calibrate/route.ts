@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { CALIBRATION_SET } from "@/lib/calibration";
-import { LLM, assessEssay, countWords, llmConfigError, overallBand } from "@/lib/assess";
+import { assessEssay, countWords, llm, llmConfigError, overallBand } from "@/lib/assess";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 600;
@@ -53,8 +53,8 @@ export async function POST() {
     : null;
 
   return NextResponse.json({
-    model: LLM.model,
-    endpoint: LLM.baseURL,
+    model: llm().model,
+    endpoint: llm().baseURL,
     results,
     mean_delta: meanDelta,
     verdict:

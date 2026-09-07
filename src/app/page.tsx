@@ -11,7 +11,6 @@ import {
   EmptyState,
   SectionTitle,
   Spinner,
-  TARGET_BAND,
   formatDate,
 } from "./ui";
 
@@ -34,10 +33,8 @@ type Stats = {
   errors: { category: string; count: number }[];
   totals: { essay_count: number; essays_this_week: number; words_written: number; unmarked: number };
   llm: { configured: boolean; model: string; endpoint: string; error: string | null };
+  settings: { target_band: number; weekly_goal: number; total_goal: number };
 };
-
-const WEEKLY_GOAL = 3;
-const TOTAL_GOAL = 20;
 
 export default function HomePage() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -50,7 +47,8 @@ export default function HomePage() {
 
   if (!stats) return <Spinner label="Loading…" />;
 
-  const { trend, recent, errors, totals, llm } = stats;
+  const { trend, recent, errors, totals, llm, settings } = stats;
+  const { target_band: TARGET, weekly_goal: WEEKLY_GOAL, total_goal: TOTAL_GOAL } = settings;
   const last = trend.at(-1) ?? null;
   const previous = trend.at(-2)?.band_overall ?? null;
   const delta = last && previous != null ? last.band_overall - previous : null;
@@ -71,9 +69,9 @@ export default function HomePage() {
             {last ? (
               <>
                 <div className="mt-2 flex items-baseline gap-4">
-                  <Band value={last.band_overall} size="xl" />
+                  <Band value={last.band_overall} size="xl" target={TARGET} />
                   <div className="text-sm text-muted">
-                    <div>target {TARGET_BAND.toFixed(1)}</div>
+                    <div>target {TARGET.toFixed(1)}</div>
                     {delta != null && delta !== 0 && (
                       <div className={delta > 0 ? "text-good" : "text-bad"}>
                         {delta > 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)} since last essay
@@ -81,9 +79,9 @@ export default function HomePage() {
                     )}
                   </div>
                 </div>
-                <BandScale value={last.band_overall} />
+                <BandScale value={last.band_overall} target={TARGET} />
                 <div className="mt-4 flex items-center gap-4 text-xs text-muted">
-                  <CriteriaBars bands={[last.band_tr, last.band_cc, last.band_lr, last.band_gra]} />
+                  <CriteriaBars bands={[last.band_tr, last.band_cc, last.band_lr, last.band_gra]} target={TARGET} />
                   <span className="font-mono">
                     TR {last.band_tr} · CC {last.band_cc} · LR {last.band_lr} · GRA {last.band_gra}
                   </span>
@@ -94,7 +92,7 @@ export default function HomePage() {
                 <p className="mt-2 text-2xl font-medium tracking-tight text-muted">
                   {totals.essay_count === 0 ? "Nothing marked yet" : "No marked essay yet"}
                 </p>
-                <BandScale value={null} />
+                <BandScale value={null} target={TARGET} />
                 {totals.unmarked > 0 && (
                   <Link href="/essays" className="mt-3 inline-block text-sm underline underline-offset-4">
                     {totals.unmarked} essay{totals.unmarked > 1 ? "s" : ""} waiting to be marked →
@@ -181,7 +179,7 @@ export default function HomePage() {
                     {e.band_overall == null ? (
                       <span className="eyebrow !text-[10px]">unmarked</span>
                     ) : (
-                      <Band value={e.band_overall} size="md" />
+                      <Band value={e.band_overall} size="md" target={TARGET} />
                     )}
                   </div>
                   <p className="min-w-0 flex-1 truncate text-sm">{e.prompt_text ?? "(no prompt)"}</p>

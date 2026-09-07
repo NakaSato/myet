@@ -25,3 +25,20 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     assessments: assessments.map((a) => ({ ...a, feedback: JSON.parse(a.feedback_json) })),
   });
 }
+
+export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params;
+
+  // Cascade by hand — the schema has no ON DELETE, and orphaned errors would
+  // keep skewing the "what keeps costing you marks" counts.
+  const removed = db.transaction(() => {
+    db.prepare(
+      "DELETE FROM errors WHERE assessment_id IN (SELECT id FROM assessments WHERE essay_id = ?)",
+    ).run(id);
+    db.prepare("DELETE FROM assessments WHERE essay_id = ?").run(id);
+    return db.prepare("DELETE FROM essays WHERE id = ?").run(id).changes;
+  })();
+
+  if (!removed) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json({ deleted: Number(id) });
+}

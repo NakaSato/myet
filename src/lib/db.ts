@@ -55,6 +55,11 @@ CREATE TABLE IF NOT EXISTS speaking_attempts (
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_assessments_essay ON assessments(essay_id);
 CREATE INDEX IF NOT EXISTS idx_errors_assessment ON errors(assessment_id);
 `;

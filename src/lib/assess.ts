@@ -1,6 +1,9 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { TASK2_DESCRIPTORS } from "./descriptors";
+import { getSettings, llmConfigError } from "./settings";
+
+export { llmConfigError };
 
 /**
  * Any OpenAI-compatible endpoint. Verified shapes:
@@ -8,20 +11,12 @@ import { TASK2_DESCRIPTORS } from "./descriptors";
  *   Ollama      http://localhost:11434/v1      (fully local, free, no key)
  *   LM Studio   http://localhost:1234/v1       (fully local, free, no key)
  *   Groq        https://api.groq.com/openai/v1 (free tier, open-weight models)
- * Switch provider by editing .env.local — no code change.
+ * Configured on the Settings page, or by env var before anything is saved.
+ * Read per call, so a change takes effect without a restart.
  */
-export const LLM = {
-  baseURL: process.env.LLM_BASE_URL ?? "https://openrouter.ai/api/v1",
-  apiKey: process.env.LLM_API_KEY ?? "not-needed",
-  model: process.env.LLM_MODEL ?? "deepseek/deepseek-chat",
-};
-
-const isLocal = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(LLM.baseURL);
-
-/** Local runtimes need no key; hosted ones do. */
-export function llmConfigError(): string | null {
-  if (isLocal || process.env.LLM_API_KEY) return null;
-  return `LLM_API_KEY is not set for ${LLM.baseURL}. Add it to .env.local and restart the dev server.`;
+export function llm() {
+  const s = getSettings();
+  return { baseURL: s.llm_base_url, apiKey: s.llm_api_key || "not-needed", model: s.llm_model };
 }
 
 const ERROR_CATEGORIES = [
@@ -129,6 +124,7 @@ export async function assessEssay({ promptText, body, wordCount }: AssessInput) 
   const configError = llmConfigError();
   if (configError) throw new Error(configError);
 
+  const LLM = llm();
   const client = new OpenAI({
     baseURL: LLM.baseURL,
     apiKey: LLM.apiKey,
