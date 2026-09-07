@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example
 
 # vercel
 .vercel
@@ -39,3 +40,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local database
+app.db
+app.db-shm
+app.db-wal
+
+# official IELTS reference PDFs (downloaded, not redistributed — npm run resources)
+resources/**/*.pdf
+
+# detached server log
+server.log
