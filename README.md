@@ -137,3 +137,30 @@ npm run resources
 interactive tasks (reading passages and listening audio can't be downloaded), and
 records the raw-score → band conversion: **30/40 in both Listening and Reading**
 for a band 7.
+
+## Sources and attribution
+
+Every piece of IELTS material in this repository comes from the official
+preparation resources published free by IELTS, and remains the property of the
+IELTS partners (British Council, IDP: IELTS Australia, Cambridge University Press
+& Assessment). It is reproduced here for personal exam preparation, with the
+source named at the top of each file.
+
+- Sample test questions (Academic) —
+  <https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test>
+- Writing band descriptors (updated May 2023) —
+  <https://ielts.org/cdn/Guides/ielts-writing-band-descriptors.pdf>
+  → the Task 2 table, bands 9–4, is reproduced in `src/lib/descriptors.ts`
+- Sample candidate writing responses and examiner comments —
+  <https://ielts.org/cdn/computer-delivered-sample-tests-academic-writing/ielts-academic-writing-example-responses-to-parts-1-and-2-with-band-scores-and-examiner-comments.pdf>
+  → the two examiner-marked Task 2 responses are reproduced in `src/lib/calibration.ts`
+- Academic Writing sample tasks (2023) —
+  <https://ielts.org/cdn/Sample-tests/ielts-academic-writing-sample-tasks-2023.pdf>
+  → 2 of the 32 seeded prompts, and the task wording the exam screen reproduces
+
+The other 30 seeded Task 2 prompts and all 8 speaking cue cards were written for
+this project and are not IELTS material.
+
+This is an unofficial personal study tool. It is not affiliated with, endorsed by,
+or connected to IELTS in any way, and a band score it produces is not an IELTS
+band score.
