@@ -9,7 +9,9 @@
     "lint": "eslint",
     "calibrate": "node scripts/calibrate.mjs",
     "serve": "next build && next start",
-    "resources": "bash scripts/fetch-resources.sh"
+    "resources": "bash scripts/fetch-resources.sh",
+    "screenshots": "node scripts/screenshots.mjs",
+    "inspera": "node scripts/fetch-inspera.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
@@ -27,6 +29,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "puppeteer-core": "^25.10.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

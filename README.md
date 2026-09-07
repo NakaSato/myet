@@ -1,166 +1,218 @@
-# IELTS Prep Tool
+# IELTS Prep
 
-A local-first feedback loop for IELTS Academic Writing Task 2. Draw a prompt,
-write against a 40-minute clock, get marked against the four official criteria in
-about a minute, and watch the trend.
+A feedback loop for IELTS Academic **Writing Task 2**. Write under exam
+conditions, get marked against the official band descriptors in about a minute,
+and see whether the score is actually moving.
 
-Single user, no login, no deployment. The database is one file (`app.db`) — back
-it up by copying it.
+Runs on your own machine. One SQLite file, no accounts, no deployment.
 
-## Setup
+> **Not affiliated with IELTS.** A band score from this tool is not an IELTS band
+> score — see [Sources and attribution](#sources-and-attribution) and
+> [What it can't do](#what-it-cant-do).
+
+---
+
+## Why
+
+Self-study for IELTS has one hole in it: you write essays and nobody marks them.
+Mistakes you don't know are mistakes stay with you, which is the usual reason
+candidates plateau at 6.0–6.5. A tutor fixes that but costs money and turns work
+around in a day or two.
+
+There is no shortage of practice material — Cambridge 16–19 and free YouTube is
+more than anyone needs. What's missing is a **fast, cheap feedback loop**. So this
+is a feedback tool, not a course library.
+
+---
+
+## The exam screen
+
+A replica of the computer-delivered test: split panes with a draggable divider,
+the official task wording, a countdown that warns at 10 and 5 minutes, and word
+count against the 250 minimum. Fixed light theme, no app navigation, no
+spell-check — what you practise on is what you sit in front of on the day.
+
+![The writing screen: 40-minute countdown, question on the left, answer on the right, word count in the footer](docs/screenshots/write.png)
+
+Drafts are saved as you type, so a stray refresh can't cost you 40 minutes.
+
+## The marking
+
+The overall band and the four criteria, then the one thing to fix first — then
+**your essay with every correction highlighted where you made it**, numbered to
+match the list below. Click a highlight to see the fix and the rule it broke.
+
+![The review screen: band 6.0 on a 4–9 ladder, four criterion scores, and the essay with corrections highlighted inline](docs/screenshots/review.png)
+
+Each criterion is justified with a sentence quoted from your own essay, because a
+band with no evidence behind it is not worth reading.
+
+## The trend
+
+Latest band on the 4–9 ladder against your target, essays this week against a
+3-a-week habit, total against 20 before exam day, and the error categories
+costing you the most marks.
+
+![The home dashboard: latest band, weekly and total goals, and top recurring errors](docs/screenshots/home.png)
+
+Per-criterion trends over every essay you've written:
+
+![The progress page: overall band trend and one small chart per criterion](docs/screenshots/progress.png)
+
+---
+
+## Quickstart
 
 ```bash
-cp .env.local.example .env.local   # pick a provider block, fill in the key
-npm run dev                        # http://localhost:3000
+npm install
+cp .env.local.example .env.local    # pick a provider block, add a key
+npm run serve                       # http://localhost:3000
 ```
 
-The marker talks to any **OpenAI-compatible** endpoint, chosen by three env vars
-(`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`) — OpenRouter, Groq, Ollama, LM Studio
-or vLLM, no code change between them. `.env.local.example` has a ready block for
-each.
+The schema is created and 32 Task 2 prompts seeded on first boot.
 
-The schema is created and the prompt list seeded automatically on first boot.
+### Choosing a provider
 
-## What's here (MVP / P0)
+Marking talks to any **OpenAI-compatible** endpoint, chosen by three environment
+variables — no code change to swap between them.
 
-- **Home** (`/`) — latest band against the 7.0 target, this week's essays against
-  the 3-a-week goal, total against the 20-before-the-exam goal, the three error
-  categories costing you the most, and your recent essays.
-- **Write** (`/write`) — a replica of the computer-delivered test screen: split panes
-  with a draggable divider, the official task wording, the countdown in the
-  header with warnings at 10 and 5 minutes, and a live word count in the footer.
-  Fixed light theme, no app navigation and no spell-check — what you practise on
-  is what you sit in front of on the day. The draft survives a refresh
-  (`localStorage`), so a stray reload can't cost you 40 minutes.
-- **Marking** — the essay goes to Claude with the band descriptors in context.
-  The model must quote your own sentences as evidence before awarding each band,
-  is instructed to mark strictly and to round *down* when torn, and returns a
-  schema-validated JSON object (structured outputs, so a malformed response is
-  impossible rather than merely unlikely).
-- **Essays** (`/essays`) — every essay with its bands. Re-mark any essay; each
-  marking is kept, so nothing is overwritten.
-- **Progress** (`/stats`) — overall band trend, one small chart per criterion,
-  and a running count of your recurring error categories.
-
-## Calibration — does it inflate?
+| | Cost | Trade-off |
+|---|---|---|
+| **Groq** free tier | free | rate-limited; easiest start |
+| **OpenRouter** + DeepSeek / Qwen | ~$0.001–0.003 per essay | needs a minimum top-up |
+| **Ollama** / LM Studio, local | free | a 7–14B model marks noticeably worse |
 
 ```bash
-npm run calibrate     # needs the app running
+LLM_BASE_URL=https://api.groq.com/openai/v1
+LLM_API_KEY=gsk_...
+LLM_MODEL=llama-3.3-70b-versatile
 ```
 
-Marks the two official IELTS sample Task 2 responses — the ones real examiners
-awarded **band 5.5** and **band 7.5** — and prints the gap. Two LLM calls, writes
-nothing to the database, and it is the only free ground truth available.
+Model size shows up directly in marking quality. A small local model will invent
+evidence, miss agreement errors, and hand band 7.5 to a band 6 essay. If you run
+local, trust the corrections and treat the band as noise.
 
-Run it once when you first pick a model, and again if you switch models. A mean
-delta of +0.5 or more means the model is flattering you: subtract that much from
-every band it gives you. Above +1.0, ignore its bands entirely and use only the
-corrections. The fixture lives in `src/lib/calibration.ts`; the source PDF is in
-`resources/` (gitignored — download it again from ielts.org if you need it).
+---
 
-One caveat baked into the fixture: the official PDF prints the responses but not
-the question, so the prompt is reconstructed. Weigh a Task Response gap less
-heavily than a gap on the other three criteria.
+## Does it inflate? Measure it
 
-## Read this before trusting a score
+```bash
+npm run calibrate
+```
 
-**Model size shows up directly in marking quality.** This is the one place in the
-project where the cheap option costs you something real: a 7–14B local model will
-happily invent evidence, miss agreement errors, and hand out band 7.5 to a band 6
-essay. If you run local, treat the corrections as useful and the band as noise. A
-hosted open-weight model (DeepSeek, Qwen, Llama 70B) costs about a tenth of a cent
-per essay and is far closer to usable.
+Marks the two official sample responses that real examiners scored **band 5.5**
+and **band 7.5**, and reports the gap:
 
-**An LLM band score is not an examiner band score.** Use it as a compass — am I
-improving, what do I keep getting wrong — not as an absolute measure. Before the
-real exam, have a human tutor mark 3–4 of these essays so you know how far above
-or below reality this thing scores.
+```
+  official-task2-band-5.5
+    examiner 5.5   tool 6.0   delta +0.5
+  official-task2-band-7.5
+    examiner 7.5   tool 7.0   delta -0.5
 
-**`src/lib/descriptors.ts` holds the official text** — the Task 2 table from
-IELTS's *Writing Band Descriptors*, updated May 2023, extracted from the PDF at
-`ielts.org/cdn/Guides/ielts-writing-band-descriptors.pdf`. Bands 9 down to 4 only:
-bands 3 and below describe responses far below anything you will produce, and
-every token here is sent on every marking call.
+  mean delta 0.0  →  close enough to a real examiner to be useful as a compass
+```
 
-## Deliberately not built
+Run it once when you pick a model, and again if you change models. Mean delta
+**≥ +0.5** means it flatters you — subtract that from every band it gives you.
+**≥ +1.0** means ignore its numbers and read only the corrections.
 
-No accounts, no payments, no Listening/Reading modules, no question bank of
-copied past papers, no deployment, no mobile layout. If a feature doesn't raise
-the score, it's out.
+Two LLM calls. Writes nothing to your database.
 
-**P1 — only after two weeks of real use:** speaking practice (Part 2 cue card →
-record → transcript → fluency metrics) and a dedicated error-log view. The
-`speaking_attempts` table and the 8 seeded cue cards are already in place; the
-error rows are already being written on every marking, so `/stats` shows the
+---
+
+## How the marking works
+
+The part that decides whether any of this is worth trusting:
+
+- **Official descriptors in context.** `src/lib/descriptors.ts` is the Writing
+  Task 2 table from IELTS's own band descriptors (May 2023), bands 9–4. Not a
+  summary, not the model's idea of what IELTS wants.
+- **Evidence before score.** The model must quote your text for each criterion
+  before awarding a band. No floating numbers.
+- **Told to mark down.** Automated markers inflate IELTS scores. The prompt says
+  so, and says to take the lower band whenever it's torn.
+- **Schema-validated.** `json_schema` first, then `json_object`, then plain text —
+  small models support none of the three — with markdown fences stripped and the
+  result checked against a Zod schema either way.
+- **Arithmetic in code.** Bands snap to the half-band grid, and the overall band
+  is computed with the official rounding rule rather than asked of the model.
+
+---
+
+## What it can't do
+
+An LLM band is not an examiner band. Use it as a compass — *am I improving, what
+do I keep getting wrong* — not as a measurement. **Before the real exam, have a
+human tutor mark 3–4 essays** so you know how far off this runs.
+
+Deliberately absent, because they wouldn't raise a score: accounts, payments,
+Listening and Reading modules, a bank of copied past papers, deployment, mobile
+layout.
+
+Planned, but only after two weeks of the writing loop actually being used:
+speaking practice (Part 2 cue card → record → transcript → fluency metrics) and a
+dedicated error-log view. The `speaking_attempts` table and 8 cue cards are
+already seeded, and error rows are written on every marking, so `/stats` shows
 category counts today.
 
-## Stack
+---
 
-Next.js (App Router) · SQLite via better-sqlite3 · any OpenAI-compatible LLM
-endpoint, with the reply validated against a Zod schema · Tailwind. No build step
-beyond Next, no server to install, no container.
+## Commands
 
-The marker tries `response_format: json_schema` first, falls back to `json_object`,
-then to plain text — small local models support none of the three — and strips
-markdown fences before validating. Band scores are snapped to the half-band grid
-in code, and the overall band is computed from the official rounding rule rather
-than asked of the model.
+| | |
+|---|---|
+| `npm run serve` | build and run (low memory, use this day to day) |
+| `npm run dev` | dev server with hot reload |
+| `npm run calibrate` | mark the official samples, report the gap |
+| `npm run resources` | re-download all 30 official IELTS PDFs |
+| `npm run screenshots` | regenerate the images in this README |
 
 ## Layout
 
 ```
-src/lib/db.ts             schema + seed, one connection per process
-src/lib/calibration.ts    official examiner-marked essays, used by npm run calibrate
-src/lib/seed-prompts.ts   32 Task 2 prompts (30 original + 2 official) + 8 cue cards
-src/lib/descriptors.ts    the official May 2023 Task 2 band descriptors
-src/lib/assess.ts         the marking prompt, schema, and overall-band arithmetic
-src/app/api/...           prompts/random · essays · essays/[id]/assess · stats
+src/app/write/           the exam screen
+src/app/essays/[id]/     the review screen
+src/app/api/             prompts/random · essays · essays/[id]/assess · stats · calibrate
+src/lib/assess.ts        the marking prompt, schema, and band arithmetic
+src/lib/descriptors.ts   the official Task 2 band descriptors
+src/lib/calibration.ts   the examiner-marked essays used by npm run calibrate
+src/lib/db.ts            schema + seed, one connection per process
 ```
+
+Next.js (App Router) · SQLite via better-sqlite3 · any OpenAI-compatible LLM ·
+Tailwind. No server to install, no container.
 
 ## Reference PDFs
 
-`resources/` holds every official IELTS document this project was built from — 30
-PDFs, gitignored. Re-download them all at any time:
+`resources/` holds every official IELTS document this project was built from —
+gitignored, fetched with two commands:
 
 ```bash
-npm run resources
+npm run resources    # 30 PDFs: band descriptors, answer keys, tapescripts
+npm run inspera      # the 20 interactive tasks, extracted to text
 ```
 
-| Folder | What's in it |
-|---|---|
-| `guides/` | Writing band descriptors (May 2023) — the source of `src/lib/descriptors.ts` — and the Speaking descriptors, for the P1 module |
-| `academic-writing/` | Examiner-marked sample responses (the calibration set) and the 2023 sample tasks (2 official Task 2 prompts + the exam wording the UI reproduces) |
-| `academic-reading/` | 10 answer keys, one per question type |
-| `listening/` | 8 answer keys + 8 full recording transcripts |
+The interactive tasks are browser-only — there is no file behind them — so
+`npm run inspera` drives a real browser through IELTS's player and saves what it
+renders. That yields the **full Academic Reading passages with their questions**,
+the listening question sheets, and the Writing prompts. Audio still can't be
+captured, but the Listening folder has all 8 **recording transcripts**: do a task
+online, then read exactly what was said and see what you misheard.
 
-`resources/INDEX.md` describes every file, lists the Inspera links for the
-interactive tasks (reading passages and listening audio can't be downloaded), and
-records the raw-score → band conversion: **30/40 in both Listening and Reading**
-for a band 7.
+`resources/INDEX.md` describes every file and records the raw-score conversion:
+**30/40 in both Listening and Reading** for a band 7.
 
 ## Sources and attribution
 
-Every piece of IELTS material in this repository comes from the official
-preparation resources published free by IELTS, and remains the property of the
-IELTS partners (British Council, IDP: IELTS Australia, Cambridge University Press
-& Assessment). It is reproduced here for personal exam preparation, with the
-source named at the top of each file.
+Every piece of IELTS material here comes from the preparation resources published
+free by IELTS, and remains the property of the IELTS partners (British Council,
+IDP: IELTS Australia, Cambridge University Press & Assessment). It is reproduced
+for personal exam preparation, with the source named at the top of each file.
 
-- Sample test questions (Academic) —
-  <https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test>
-- Writing band descriptors (updated May 2023) —
-  <https://ielts.org/cdn/Guides/ielts-writing-band-descriptors.pdf>
-  → the Task 2 table, bands 9–4, is reproduced in `src/lib/descriptors.ts`
-- Sample candidate writing responses and examiner comments —
-  <https://ielts.org/cdn/computer-delivered-sample-tests-academic-writing/ielts-academic-writing-example-responses-to-parts-1-and-2-with-band-scores-and-examiner-comments.pdf>
-  → the two examiner-marked Task 2 responses are reproduced in `src/lib/calibration.ts`
-- Academic Writing sample tasks (2023) —
-  <https://ielts.org/cdn/Sample-tests/ielts-academic-writing-sample-tasks-2023.pdf>
-  → 2 of the 32 seeded prompts, and the task wording the exam screen reproduces
+- [Sample test questions (Academic)](https://ielts.org/take-a-test/preparation-resources/sample-test-questions/academic-test)
+- [Writing band descriptors, May 2023](https://ielts.org/cdn/Guides/ielts-writing-band-descriptors.pdf) → `src/lib/descriptors.ts`
+- [Sample responses with band scores and examiner comments](https://ielts.org/cdn/computer-delivered-sample-tests-academic-writing/ielts-academic-writing-example-responses-to-parts-1-and-2-with-band-scores-and-examiner-comments.pdf) → `src/lib/calibration.ts`
+- [Academic Writing sample tasks, 2023](https://ielts.org/cdn/Sample-tests/ielts-academic-writing-sample-tasks-2023.pdf) → 2 of the 32 prompts, and the task wording on the exam screen
 
-The other 30 seeded Task 2 prompts and all 8 speaking cue cards were written for
-this project and are not IELTS material.
-
-This is an unofficial personal study tool. It is not affiliated with, endorsed by,
-or connected to IELTS in any way, and a band score it produces is not an IELTS
-band score.
+The other 30 Task 2 prompts and all 8 speaking cue cards were written for this
+project and are not IELTS material.

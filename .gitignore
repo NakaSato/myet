@@ -51,3 +51,6 @@ resources/**/*.pdf
 
 # detached server log
 server.log
+
+# extracted Inspera task text (npm run inspera)
+resources/inspera/

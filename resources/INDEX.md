@@ -43,10 +43,34 @@ Audio is not downloadable — it plays inside the Inspera player.
 
 ---
 
-## Interactive tasks (browser only, cannot be downloaded)
+## inspera/ — the interactive tasks, extracted
 
-These run in IELTS's Inspera player. Reading passages, listening audio, and the
-Writing task screens are all here.
+The reading passages, listening questions and writing prompts live in IELTS's
+Inspera player, with no file behind them. `npm run inspera` drives a browser
+through all 20 and saves the rendered text:
+
+| Folder | What you get |
+|---|---|
+| `inspera/academic-reading/` | 10 tasks — **the full passages and their questions** (Marie Curie, urban farming, and the rest) |
+| `inspera/listening/` | 8 tasks — the question sheets. Audio can't be captured; pair with the tapescripts in `listening/` |
+| `inspera/academic-writing/` | Task 1 and Task 2 prompts, with the official instruction wording |
+
+The Task 2 prompt there is the one the examiner-marked sample responses answer,
+so it is what `src/lib/calibration.ts` uses:
+
+> The average standard of people's health is likely to be lower in the future
+> than it is now. To what extent do you agree or disagree with this statement?
+
+**How to use the reading files:** read the passage and answer the questions from
+`inspera/academic-reading/<type>.txt`, then mark yourself against
+`academic-reading/<type>-answer-key.pdf`.
+
+---
+
+## Interactive tasks — the original links
+
+Everything above came from these. Open them to do a task with the real timer,
+audio, and answer boxes.
 
 **Full practice tests**
 - Listening — <https://demo-ielts.inspera.com/player/?assessmentRunId=131012334&context=exam>

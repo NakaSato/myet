@@ -10,28 +10,27 @@
  * These are a TEST FIXTURE and are deliberately kept out of the `essays` table —
  * they are not your writing and must never appear in your progress trend.
  *
- * Caveat: the PDF prints the responses but not the question. `prompt` below is
- * reconstructed from what both candidates are answering, so treat a Task Response
- * gap as less meaningful than a gap on the other three criteria.
+ * The PDF prints the responses but not the question. The question below is the
+ * real one, read out of the official Inspera sample task both candidates sat:
+ * https://ielts.inspera.com/player/?assessmentRunId=189733431&context=exam
+ * (see `npm run inspera`), so the Task Response scores are comparable too.
  */
 
 export type CalibrationCase = {
   id: string;
   prompt: string;
-  promptIsReconstructed: true;
   officialBand: number;
   examinerComment: string;
   body: string;
 };
 
 const PROMPT =
-  "In the future, people's health will be worse than it is today. To what extent do you agree or disagree?";
+  "The average standard of people's health is likely to be lower in the future than it is now.\n\nTo what extent do you agree or disagree with this statement?";
 
 export const CALIBRATION_SET: CalibrationCase[] = [
   {
     id: "official-task2-band-5.5",
     prompt: PROMPT,
-    promptIsReconstructed: true,
     officialBand: 5.5,
     examinerComment:
       "A clear position is presented from the outset, supported by relevant ideas. These would require further development to achieve a higher score. It is also useful to note, this response does not meet the minimum word count for Task 2 of 250 words, so there is room for further development. Information and ideas are generally arranged coherently and there is a clear overall progression. Cohesive devices are used effectively, but paragraphing is not always logical. A range of vocabulary is attempted, although there is a lack of precision in word choice and there are some errors in spelling and word formation. There also appears to be some interference from the test taker's first language, e.g. 'alimentation', but these features do not make the answer difficult to understand. There is a mix of sentence forms, but the level of error is too high to achieve a higher band score.",
@@ -43,7 +42,6 @@ Another important issue that I would like to mention is how medicine is changing
   {
     id: "official-task2-band-7.5",
     prompt: PROMPT,
-    promptIsReconstructed: true,
     officialBand: 7.5,
     examinerComment:
       "This is a strong response. A clear position is presented at the outset and some ideas are explored to support it. An alternative position is also considered but rejected. Ideas are logically organised and there is a clear progression throughout the response. Cohesive devices are generally used flexibly, but there is some overuse of sequencers in paragraph 2 [Firstly | So | Also | Yet]. Paragraphing is generally effective but could perhaps be used more appropriately by breaking down paragraphs 2 and 3. There is a wide range of vocabulary with good use of less common items as well as evidence of higher-level features, such as 'softening', e.g. 'They tend to', 'This appears to be', and 'might disagree'. Errors in spelling and word formation are rare. There is also a variety of complex structures with frequent error-free sentences, though some errors do occur and there is some overuse of rather short sentence forms.",
